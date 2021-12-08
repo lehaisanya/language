@@ -21,7 +21,8 @@ declare const enum TokenType {
     PLUS = 'PLUS',
     MINUS = 'MINUS',
     LPAREN = 'LPARENT',
-    RPAREN = 'RPARENT'
+    RPAREN = 'RPARENT',
+    EOF = 'EOF'
 }
 
 declare class Pattern {

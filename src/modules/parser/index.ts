@@ -10,8 +10,12 @@ export class Parser {
     private config: FullParserConfig
     private statements: Statement[] = []
 
+    private get lastToken(): Token {
+        return this.tokens[this.tokens.length-1]
+    }
+
     private get current(): Token {
-        return this.tokens[this.pos]
+        return this.isNoEnd ?  this.tokens[this.pos] : this.lastToken
     }
 
     private get isNoEnd(): boolean {
@@ -30,21 +34,29 @@ export class Parser {
 
         while (this.isNoEnd) {
             const statement = this.parseStatement()
-            this.statements.push(statement)
-            this.log(`Parse new statement\n${statement}`)
+            if (statement) {
+                this.statements.push(statement)
+                this.log(`Parse new statement\n${statement}`)
+            } else {
+                break
+            }
         }
+
+        this.expect(TokenType.EOF)
 
         this.log('Parsing successfuly ended')
 
         return this.statements
     }
 
-    private parseStatement(): Statement {
+    private parseStatement(): Statement | null {
         switch (this.current.type) {
             case "LOG":
                 return this.parseLog()
             case "SEMICOLON":
                 return this.parseSemicolon()
+            case TokenType.EOF:
+                return null
             default:
                 const message = `Unexpected token ${this.current}`
                 this.error(message)

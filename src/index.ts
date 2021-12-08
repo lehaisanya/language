@@ -18,5 +18,5 @@ try {
     const parser = new Parser({ debug: DEBUG, logger })
     const ast = parser.parse(tokens)
 } catch(err) {
-    console.log(err)
+    // console.log(err)
 }
