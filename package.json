@@ -1,0 +1,31 @@
+{
+  "name": "language",
+  "version": "1.0.0",
+  "description": "My language",
+  "main": "./src/index.ts",
+  "scripts": {
+    "serve": "npm run build && npm start",
+    "build": "npm run clean && npm run build:ts",
+    "build:ts": "tsc",
+    "start": "node ./build/index.js",
+    "dev": "npm run build && npm run watch",
+    "watch": "concurrently \"npm run watch:ts\" \"npm run watch:js\"",
+    "watch:ts": "tsc --watch",
+    "watch:js": "nodemon ./build/index.js",
+    "start:fast": "ts-node ./src/index.ts",
+    "clean": "trash build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "language"
+  ],
+  "author": "lehaisanya",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^6.4.0",
+    "nodemon": "^2.0.15",
+    "trash-cli": "^5.0.0",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.2"
+  }
+}
