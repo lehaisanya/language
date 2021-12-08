@@ -10,10 +10,25 @@ declare type LexerConfig = RequiredLexerConfig & Partial<OptionalLexerConfig>
 
 declare type FullLexerConfig = RequiredLexerConfig & OptionalLexerConfig
 
-declare class TokenType {
-    name: string
-    pattern: RegExp
-    constructor(name: string, pattern: string)
+declare const enum TokenType {
+    LOG = 'LOG',
+    NUMBER = 'NUMBER',
+    VARIABLE = 'VARIABLE',
+    SEMICOLON = 'SEMICOLON',
+    SPACE = 'SPACE',
+    NEWLINE = 'NEWLINE',
+    ASSIGN = 'ASSIGN',
+    PLUS = 'PLUS',
+    MINUS = 'MINUS',
+    LPAREN = 'LPARENT',
+    RPAREN = 'RPARENT'
+}
+
+declare class Pattern {
+    tokenType: TokenType
+    regexp: RegExp
+    constructor(tokenType: TokenType, pattern: string)
+    match(source: string): string | null
     toString(): string
 }
 

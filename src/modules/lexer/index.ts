@@ -1,4 +1,4 @@
-import { tokenTypeList, tokenTypes, Token } from "./tokens"
+import { Token, patterns } from "./tokens"
 
 const defaultConfig: OptionalLexerConfig = {
     debug: false
@@ -34,13 +34,13 @@ export class Lexer {
         this.log(`Scanned tokens count is ${this.tokens.length}`)
 
         return this.tokens.filter(
-            token => !token.isInclude(tokenTypes.SPACE, tokenTypes.NEWLINE)
+            token => !token.isInclude(TokenType.SPACE, TokenType.NEWLINE)
         )
     }
 
     private nextToken() {
-        for (let tokenType of tokenTypeList) {
-            const token = this.checkTokenType(tokenType)
+        for (let pattern of patterns) {
+            const token = this.checkPattern(pattern)
 
             if (token) {
                 this.tokens.push(token)
@@ -53,10 +53,10 @@ export class Lexer {
         this.error(errorMessage)
     }
 
-    private checkTokenType(tokenType: TokenType): Token | null {
-        const result = this.matchPattern(tokenType.pattern)
+    private checkPattern(pattern: Pattern): Token | null {
+        const result = this.matchPattern(pattern)
 
-        return result ? this.createToken(tokenType, result) : null
+        return result ? this.createToken(pattern.tokenType, result) : null
     }
 
     private createToken(type: TokenType, text: string): Token {
@@ -74,15 +74,14 @@ export class Lexer {
     private moveToken(token: Token) {
         this.pos += token.text.length
         this.linePos += token.text.length
-        if (token.is(tokenTypes.NEWLINE)) {
+        if (token.is(TokenType.NEWLINE)) {
             this.line++
             this.linePos = 0
         }
     }
 
-    private matchPattern(pattern: RegExp): string | null {
-        const matches = this.source.substr(this.pos).match(pattern)
-        return matches && matches[0] ? matches[0] : null
+    private matchPattern(pattern: Pattern): string | null {
+        return pattern.match(this.source.substr(this.pos))
     }
 
     private log(message: string) {

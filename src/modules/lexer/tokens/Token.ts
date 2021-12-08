@@ -10,11 +10,11 @@ export class Token implements TokenData {
     }
 
     public is(type: TokenType): boolean {
-        return this.type.name === type.name
+        return this.type === type
     }
 
     public isInclude(...types: TokenType[]) {
-        return types.some(type => this.type.name === type.name)
+        return types.some(type => this.type === type)
     }
 
     public toString(): string {

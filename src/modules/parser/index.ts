@@ -1,4 +1,3 @@
-import { tokenTypes } from "../lexer/tokens"
 import { LogStatement, SemiStatement } from "./statements"
 
 const defaultConfig: OptionalParserConfig = {
@@ -41,7 +40,7 @@ export class Parser {
     }
 
     private parseStatement(): Statement {
-        switch (this.current.type.name) {
+        switch (this.current.type) {
             case "LOG":
                 return this.parseLog()
             case "SEMICOLON":
@@ -53,14 +52,15 @@ export class Parser {
     }
 
     private parseLog(): LogStatement {
-        this.expect(tokenTypes.LOG)
-        const parameter = this.expect(tokenTypes.NUMBER)
+        this.expect(TokenType.LOG)
+        const parameter = this.expect(TokenType.NUMBER)
+        this.expect(TokenType.SEMICOLON)
         return new LogStatement(parameter)
     }
 
     private parseSemicolon(): SemiStatement {
-        this.expect(tokenTypes.SEMICOLON)
-        return new SemiStatement()
+        this.expect(TokenType.SEMICOLON)
+        return new SemiStatement();
     }
 
     private match(tokenType: TokenType): boolean {
@@ -68,6 +68,10 @@ export class Parser {
     }
 
     private expect(tokenType: TokenType): Token | never {
+        if (!this.isNoEnd) {
+            const errorMessage = `Expected token <${tokenType}>, but get end of file`
+            this.error(errorMessage)
+        }
         if (this.current.is(tokenType)) {
             return this.next()
         } else {
@@ -97,6 +101,6 @@ export class Parser {
             line: token.line,
             pos: token.linePos+1,
             message,
-        });
+        })
     }
 }
