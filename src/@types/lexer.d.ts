@@ -11,18 +11,41 @@ declare type LexerConfig = RequiredLexerConfig & Partial<OptionalLexerConfig>
 declare type FullLexerConfig = RequiredLexerConfig & OptionalLexerConfig
 
 declare const enum TokenType {
+    // KEYWORDS
+    LET = "LET",
+    CONST = 'CONST',
+    TYPE = "TYPE",
     LOG = 'LOG',
+    IMPORT = "IMPORT",
+    EXPORT = "EXPORT",
+    FROM = "FROM",
+
+    // LITERALS
     NUMBER = 'NUMBER',
-    VARIABLE = 'VARIABLE',
+    NAME = 'NAME',
+    STRING = 'STRING',
+    NULL = "NULL",
+
+    // SYSTEM
+    COMMA = "KOMMA",
     SEMICOLON = 'SEMICOLON',
+    INLINECOMMENT = "INLINECOMMENT",
+    MULTILINECOMMENT = "MULTILINECOMMENT",
     SPACE = 'SPACE',
     NEWLINE = 'NEWLINE',
+    EOF = 'EOF',
+
+    // OPERATORS
     ASSIGN = 'ASSIGN',
     PLUS = 'PLUS',
     MINUS = 'MINUS',
+    STAR = "STAR",
+    SLASH = "SLASH",
+    COLON = "COLON",
+
+    // PARENCES
     LPAREN = 'LPARENT',
     RPAREN = 'RPARENT',
-    EOF = 'EOF'
 }
 
 declare class Pattern {
