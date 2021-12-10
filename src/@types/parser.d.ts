@@ -15,3 +15,10 @@ declare abstract class Statement {
     constructor(name: string)
     toString(): string
 }
+
+declare interface VarDeclarationConfig {
+    variable: Token
+    value: Token
+    type: Token | null
+    isConst: boolean
+}

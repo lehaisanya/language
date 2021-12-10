@@ -114,13 +114,15 @@ export class Lexer {
     }
 
     private error(message: string): never {
-        this.log(message)
-        this.config.logger.error({
+        const error: CompilerError = {
             type: "Syntaxs",
             length: 1,
             line: this.line,
             pos: this.linePos+1,
             message
-        })
+        }
+        this.log(message)
+        this.config.logger.error(error)
+        throw error
     }
 }

@@ -19,12 +19,14 @@ declare const enum TokenType {
     IMPORT = "IMPORT",
     EXPORT = "EXPORT",
     FROM = "FROM",
+    STRINGKEYWORD = "STRINGKEYWORD",
+    NUMBERKEYWORD = "NUMBERKEYWORD",
+    NULL = "NULL",
 
     // LITERALS
     NUMBER = 'NUMBER',
     NAME = 'NAME',
     STRING = 'STRING',
-    NULL = "NULL",
 
     // SYSTEM
     COMMA = "KOMMA",

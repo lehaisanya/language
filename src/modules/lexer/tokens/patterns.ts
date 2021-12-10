@@ -8,11 +8,13 @@ export const patterns = [
     new Pattern(TokenType.IMPORT, 'import'),
     new Pattern(TokenType.EXPORT, 'export'),
     new Pattern(TokenType.FROM, 'from'),
+    new Pattern(TokenType.STRINGKEYWORD, 'string'),
+    new Pattern(TokenType.NUMBERKEYWORD, 'number'),
+    new Pattern(TokenType.NULL, 'null'),
 
     new Pattern(TokenType.NUMBER, '[0-9]+'),
     new Pattern(TokenType.NAME, '[a-zA-Z_][a-zA-Z0-9_]*'),
     new Pattern(TokenType.STRING, '".*"'),
-    new Pattern(TokenType.NULL, 'null'),
 
     new Pattern(TokenType.COMMA, ','),
     new Pattern(TokenType.SEMICOLON, ';'),

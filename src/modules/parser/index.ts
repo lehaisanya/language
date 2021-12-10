@@ -1,4 +1,5 @@
 import { LogStatement, SemiStatement } from "./statements"
+import { VarDeclarationStatement } from "./statements/VarDeclarationStatement"
 
 const defaultConfig: OptionalParserConfig = {
     debug: false
@@ -15,11 +16,11 @@ export class Parser {
     }
 
     private get current(): Token {
-        return this.isNoEnd ?  this.tokens[this.pos] : this.lastToken
+        return this.pos < this.tokens.length ? this.tokens[this.pos] : this.lastToken
     }
 
     private get isNoEnd(): boolean {
-        return this.pos < this.tokens.length
+        return this.current.type !== TokenType.EOF
     }
 
     constructor(config: ParserConfig) {
@@ -33,46 +34,104 @@ export class Parser {
         this.log('Parsing...')
 
         while (this.isNoEnd) {
-            const statement = this.parseStatement()
-            if (statement) {
-                this.statements.push(statement)
-                this.log(`Parse new statement\n${statement}`)
-            } else {
-                break
-            }
-        }
 
-        this.expect(TokenType.EOF)
+            const statement = this.parseStatement()
+            this.statements.push(statement)
+            this.log(`Parse new statement\n${statement}`)
+        }
 
         this.log('Parsing successfuly ended')
 
         return this.statements
     }
 
-    private parseStatement(): Statement | null {
+    private parseStatement(): Statement {
+        let statement: Statement = null!
         switch (this.current.type) {
-            case "LOG":
-                return this.parseLog()
-            case "SEMICOLON":
-                return this.parseSemicolon()
-            case TokenType.EOF:
-                return null
+            case TokenType.LOG:
+                statement = this.parseLog()
+                break;
+            case TokenType.LET:
+            case TokenType.CONST:
+            case TokenType.NAME:
+                statement = this.parseVarDeclaration()
+                break
             default:
                 const message = `Unexpected token ${this.current}`
                 this.error(message)
         }
+        this.expectSemicolon()
+        while (this.match(TokenType.SEMICOLON)) {
+            this.expectSemicolon()
+        }
+        return statement
     }
 
     private parseLog(): LogStatement {
         this.expect(TokenType.LOG)
         const parameter = this.expect(TokenType.NUMBER)
-        this.expect(TokenType.SEMICOLON)
         return new LogStatement(parameter)
     }
 
-    private parseSemicolon(): SemiStatement {
+    private expectSemicolon() {
         this.expect(TokenType.SEMICOLON)
-        return new SemiStatement();
+    }
+
+    private parseVarDeclaration(): VarDeclarationStatement {
+        const config = {} as VarDeclarationConfig
+        config.isConst = this.match(TokenType.CONST)
+
+        if (this.match(TokenType.CONST)) {
+            this.expect(TokenType.CONST)
+        } else  if (this.match(TokenType.LET)) {
+            this.expect(TokenType.LET)
+        }
+
+        config.variable = this.expect(TokenType.NAME)
+
+        if (this.match(TokenType.COLON)) {
+            this.expect(TokenType.COLON)
+
+            config.type = this.parseTypeExpressions()
+        } else {
+            config.type = null
+        }
+
+        this.expect(TokenType.ASSIGN)
+
+        config.value = this.parseExpression()
+
+        return new VarDeclarationStatement(config)
+    }
+
+    private parseTypeExpressions(): Token {
+        switch (this.current.type) {
+            case TokenType.NULL:
+                return this.expect(TokenType.NULL)
+            case TokenType.STRINGKEYWORD:
+                return this.expect(TokenType.STRINGKEYWORD)
+            case TokenType.NUMBERKEYWORD:
+                return this.expect(TokenType.NUMBERKEYWORD)
+            default:
+                const errorMessage = `Expect type, but got ${this.current}`
+                this.error(errorMessage)
+        }
+    }
+
+    private parseExpression(): Token {
+        switch (this.current.type) {
+            case TokenType.NAME:
+                return this.expect(TokenType.NAME)
+            case TokenType.NUMBER:
+                return this.expect(TokenType.NUMBER)
+            case TokenType.STRING:
+                return this.expect(TokenType.STRING)
+            case TokenType.NULL:
+                return this.expect(TokenType.NULL)
+            default:
+                const errorMessage = `Expected expression, but get ${this.current}`
+                this.error(errorMessage)
+        }
     }
 
     private match(tokenType: TokenType): boolean {
@@ -105,14 +164,16 @@ export class Parser {
     }
 
     private error(message: string): never {
-        this.log(message)
         const token = this.current
-        this.config.logger.error({
+        const error: CompilerError = {
             type: 'Syntax',
             length: token.text.length,
             line: token.line,
             pos: token.linePos+1,
             message,
-        })
+        }
+        this.log(message)
+        this.config.logger.error(error)
+        throw error
     }
 }

@@ -1,3 +1,17 @@
-log 10 "a   a"
+let aaa = 12;
+const bb = "hello world";
+
+c = null;
+
+const hack: string = "hello"
+
+const ddd: number = null;
+
+let cccc: null = 123;;;;;
+
+c = asd;
+
+
+log 10;;   ;
 log 5     ;
 log 15;
