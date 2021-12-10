@@ -1,6 +1,9 @@
 import { LogStatement, SemiStatement } from "./statements"
 import { VarDeclarationStatement } from "./statements/VarDeclarationStatement"
 
+const CUSTOM_ERROR_FOR_EOF = true
+const NEED_SEMICOLON = true
+
 const defaultConfig: OptionalParserConfig = {
     debug: false
 }
@@ -19,8 +22,8 @@ export class Parser {
         return this.pos < this.tokens.length ? this.tokens[this.pos] : this.lastToken
     }
 
-    private get isNoEnd(): boolean {
-        return this.current.type !== TokenType.EOF
+    private get isEnd(): boolean {
+        return this.current.type === TokenType.EOF
     }
 
     constructor(config: ParserConfig) {
@@ -33,8 +36,7 @@ export class Parser {
 
         this.log('Parsing...')
 
-        while (this.isNoEnd) {
-
+        while (!this.isEnd) {
             const statement = this.parseStatement()
             this.statements.push(statement)
             this.log(`Parse new statement\n${statement}`)
@@ -47,6 +49,7 @@ export class Parser {
 
     private parseStatement(): Statement {
         let statement: Statement = null!
+
         switch (this.current.type) {
             case TokenType.LOG:
                 statement = this.parseLog()
@@ -60,46 +63,43 @@ export class Parser {
                 const message = `Unexpected token ${this.current}`
                 this.error(message)
         }
+
         this.expectSemicolon()
-        while (this.match(TokenType.SEMICOLON)) {
-            this.expectSemicolon()
-        }
+
         return statement
+    }
+
+    private expectSemicolon() {
+        if (NEED_SEMICOLON) {
+            this.expect(TokenType.SEMICOLON)
+        }
+        while (this.match(TokenType.SEMICOLON)) {}
     }
 
     private parseLog(): LogStatement {
         this.expect(TokenType.LOG)
-        const parameter = this.expect(TokenType.NUMBER)
+        const parameter = this.parseExpression()
         return new LogStatement(parameter)
-    }
-
-    private expectSemicolon() {
-        this.expect(TokenType.SEMICOLON)
     }
 
     private parseVarDeclaration(): VarDeclarationStatement {
         const config = {} as VarDeclarationConfig
-        config.isConst = this.match(TokenType.CONST)
 
-        if (this.match(TokenType.CONST)) {
-            this.expect(TokenType.CONST)
-        } else  if (this.match(TokenType.LET)) {
-            this.expect(TokenType.LET)
+        config.isConst = !!this.match(TokenType.CONST)
+
+        if (!config.isConst) {
+            this.match(TokenType.LET)
         }
 
         config.variable = this.expect(TokenType.NAME)
 
-        if (this.match(TokenType.COLON)) {
-            this.expect(TokenType.COLON)
+        config.type = this.match(TokenType.COLON)
+            ? this.parseTypeExpressions()
+            : null
 
-            config.type = this.parseTypeExpressions()
-        } else {
-            config.type = null
-        }
-
-        this.expect(TokenType.ASSIGN)
-
-        config.value = this.parseExpression()
+        config.value = this.match(TokenType.ASSIGN)
+            ? this.parseExpression()
+            : null
 
         return new VarDeclarationStatement(config)
     }
@@ -134,24 +134,27 @@ export class Parser {
         }
     }
 
-    private match(tokenType: TokenType): boolean {
+    private expect(tokenType: TokenType): Token | never {
+        if (CUSTOM_ERROR_FOR_EOF && this.isEnd) {
+            const errorMessage = `Expected token <${tokenType}>, but get end of file`
+            this.error(errorMessage)
+        } else if (!this.check(tokenType)) {
+            const errorMessage = `Expected token <${tokenType}>, but get ${this.current}`
+            this.error(errorMessage)
+        } else {
+            return this.skip()
+        }
+    }
+
+    private match(tokenType: TokenType): Token | null {
+        return this.check(tokenType) ? this.skip() : null
+    }
+
+    private check(tokenType: TokenType): boolean {
         return this.current.is(tokenType)
     }
 
-    private expect(tokenType: TokenType): Token | never {
-        if (!this.isNoEnd) {
-            const errorMessage = `Expected token <${tokenType}>, but get end of file`
-            this.error(errorMessage)
-        }
-        if (this.current.is(tokenType)) {
-            return this.next()
-        } else {
-            const errorMessage = `Expected token <${tokenType}>, but get ${this.current}`
-            this.error(errorMessage)
-        }
-    }
-
-    private next(): Token {
+    private skip(): Token {
         const current = this.current
         this.pos++
         return current

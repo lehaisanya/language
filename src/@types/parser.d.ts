@@ -18,7 +18,7 @@ declare abstract class Statement {
 
 declare interface VarDeclarationConfig {
     variable: Token
-    value: Token
+    value: Token | null
     type: Token | null
     isConst: boolean
 }

@@ -3,7 +3,7 @@ import { Statement } from "."
 export class VarDeclarationStatement extends Statement {
     variable: Token
     type: Token | null
-    value: Token
+    value: Token | null
     isConst: boolean
 
     constructor({ variable, type, value, isConst }: VarDeclarationConfig) {
