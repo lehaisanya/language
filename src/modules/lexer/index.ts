@@ -18,21 +18,34 @@ export class Lexer {
 
     constructor(config: LexerConfig) {
         this.config = { ...defaultConfig, ...config }
-        this.log('Debugging is enabled')
+        this.log('====== Дебаг увімкнуто ======')
     }
 
     public scan(code: string): Token[] {
         this.source = code
 
-        this.log(`===== Source =====\n${JSON.stringify(code)}`)
+        this.log(`===== Ісходні дані =====\n${JSON.stringify(code)}`)
 
-        this.log('Scaning...')
+        this.log('Сканування почалося...')
 
         while (this.isNoEnd) {
-            this.log(`===== Scaning for new token ====`)
-            this.nextToken()
+            this.log(`===== Скануємо новий токен ====`)
+            const token = this.nextToken()
+            this.log(`Знайдено токен ${token}`)
+            this.tokens.push(token)
         }
 
+        this.endOfFile()
+
+        this.log('Сканування успішно завершилось')
+        this.log(`Кількість відсканованих токенів ${this.tokens.length}`)
+
+        return this.tokens.filter(
+            token => !token.isInclude(TokenType.SPACE, TokenType.NEWLINE)
+        )
+    }
+
+    private endOfFile() {
         const eof = new Token({
             type: TokenType.EOF,
             text: ' ',
@@ -40,40 +53,30 @@ export class Lexer {
             pos: this.pos,
             linePos: this.linePos,
         })
-
-        this.log(`Create eof token ${eof}`)
-
         this.tokens.push(eof)
-
-        this.log(`Find token ${eof}`)
-
-        this.log('Scanning successfuly ended')
-        this.log(`Scanned tokens count is ${this.tokens.length}`)
-
-        return this.tokens.filter(
-            token => !token.isInclude(TokenType.SPACE, TokenType.NEWLINE)
-        )
+        this.log(`Знайдено токен ${eof}`)
     }
 
-    private nextToken() {
+    private nextToken(): Token {
         for (let pattern of patterns) {
             const token = this.checkPattern(pattern)
 
             if (token) {
-                this.tokens.push(token)
-                this.log(`Find token ${token}`)
-                return
+                return token
             }
         }
 
-        const errorMessage = `Unexpected character "${this.source[this.pos]}"`
+        this.log(`Ні один паттерн не співпав`)
+
+        const errorMessage = `Неочікуваний символ "${this.source[this.pos]}"`
         this.error(errorMessage)
     }
 
     private checkPattern(pattern: Pattern): Token | null {
+        this.log(`Тестуємо паттерн ${pattern}`)
         const result = this.matchPattern(pattern)
         if (result) {
-            this.log(`Pattern matched! ${JSON.stringify(result)}`)
+            this.log(`Паттерн співпав! ${JSON.stringify(result)}`)
         }
 
         return result ? this.createToken(pattern.tokenType, result) : null
@@ -92,30 +95,27 @@ export class Lexer {
     }
 
     private moveToken(token: Token) {
-        this.log(`Move token ${token}, line=${this.line} pos=${this.linePos}`)
         this.pos += token.text.length
         this.linePos += token.text.length
         if (token.is(TokenType.NEWLINE)) {
             this.line++
             this.linePos = 0
         }
-        this.log(`Moved to line=${this.line} pos=${this.linePos}`)
     }
 
     private matchPattern(pattern: Pattern): string | null {
-        this.log(`Match pattern ${pattern}`)
         return pattern.match(this.source.substr(this.pos))
     }
 
     private log(message: string) {
         if (this.config.debug) {
-            this.config.logger.log('[Lexer] ' + message)
+            this.config.logger.log('[Лексер] ' + message)
         }
     }
 
     private error(message: string): never {
         const error: CompilerError = {
-            type: "Syntaxs",
+            type: "Синтаксична",
             length: 1,
             line: this.line,
             pos: this.linePos+1,

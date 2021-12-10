@@ -28,26 +28,28 @@ export class Parser {
 
     constructor(config: ParserConfig) {
         this.config = { ...defaultConfig, ...config }
-        this.log('Debug is enabling')
+        this.log(`============================================================`)
+        this.log('====== Дебаг увімкнуто ======')
     }
 
     public parse(tokens: Token[]): Statement[] {
         this.tokens = tokens
 
-        this.log('Parsing...')
+        this.log('Парсинг почався...')
 
         while (!this.isEnd) {
-            const statement = this.parseStatement()
-            this.statements.push(statement)
-            this.log(`Parse new statement\n${statement}`)
+            this.statements.push(this.parseStatement())
         }
 
-        this.log('Parsing successfuly ended')
+        this.log('Парсинг успішно завершився')
+        this.log(`Кількість розпаршених висказуваннь ${this.statements.length}`)
 
         return this.statements
     }
 
     private parseStatement(): Statement {
+        this.log('====== Парсимо нове висказування ======')
+        this.log(`Дивимося на наступний токен ${this.current}`)
         let statement: Statement = null!
 
         switch (this.current.type) {
@@ -56,17 +58,102 @@ export class Parser {
                 break;
             case TokenType.LET:
             case TokenType.CONST:
-            case TokenType.NAME:
                 statement = this.parseVarDeclaration()
                 break
             default:
-                const message = `Unexpected token ${this.current}`
+                const message = `Неочікуваний токен ${this.current}`
                 this.error(message)
         }
 
         this.expectSemicolon()
 
+        this.log(`Розпарсили нове висказування\n${statement}`)
+
         return statement
+    }
+
+    private parseLog(): LogStatement {
+        this.log(`Зрозуміло, що перед нами визказування виводу на екран`)
+        this.skip()
+
+        this.log(`Далі повинен слідувати вираз`)
+        const parameter = this.parseExpression()
+
+        return new LogStatement(parameter)
+    }
+
+    private parseVarDeclaration(): VarDeclarationStatement {
+        this.log(`Зрозуміло, що перед нами висказування опису змінної`)
+        const config = {} as VarDeclarationConfig
+
+        if (this.match(TokenType.CONST)) {
+            this.log(`Тепер зрозуміло що описується константа`)
+            config.isConst = true
+        } else {
+            this.expect(TokenType.LET)
+            config.isConst = false
+        }
+
+        config.variable = this.expect(TokenType.NAME)
+
+        if (this.match(TokenType.COLON)) {
+            this.log(`Значить далі визначення типу`)
+            config.type = this.parseTypeExpression()
+        } else {
+            this.log(`Значить висказування без визначення типу`)
+            config.type = null
+        }
+
+        if (this.match(TokenType.ASSIGN)) {
+            this.log(`Значить далі вираз`)
+            config.value = this.parseExpression()
+        } else {
+            this.log(`Значить висказування без визначення значеня`)
+            config.value = null
+        }
+
+        return new VarDeclarationStatement(config)
+    }
+
+    private parseTypeExpression(): Token {
+        this.log(`Починаємо парсити вираз типу`)
+        let expression: Token = null!
+
+        switch (this.current.type) {
+            case TokenType.NULL:
+            case TokenType.STRINGKEYWORD:
+            case TokenType.NUMBERKEYWORD:
+                this.log(`Ми знайшли токен типу ${this.current}`)
+                expression = this.skip()
+                break
+            default:
+                const errorMessage = `Очікувати тип, але отримали ${this.current}`
+                this.error(errorMessage)
+        }
+
+        this.log(`Ми успішно розпарсили вираз типу ${expression}`)
+        return expression
+    }
+
+    private parseExpression(): Token {
+        this.log(`Починаємо парсити вираз`)
+        let expression: Token = null!
+
+        switch (this.current.type) {
+            case TokenType.NAME:
+            case TokenType.NUMBER:
+            case TokenType.STRING:
+            case TokenType.NULL:
+                this.log(`Ми знайшли токен виразу ${this.current}`)
+                expression = this.skip()
+                break
+            default:
+                const errorMessage = `Очікували вираз, але отримали ${this.current}`
+                this.error(errorMessage)
+        }
+
+        this.log(`Ми успішно розпарсили вираз ${expression}`)
+        return expression
     }
 
     private expectSemicolon() {
@@ -76,70 +163,13 @@ export class Parser {
         while (this.match(TokenType.SEMICOLON)) {}
     }
 
-    private parseLog(): LogStatement {
-        this.expect(TokenType.LOG)
-        const parameter = this.parseExpression()
-        return new LogStatement(parameter)
-    }
-
-    private parseVarDeclaration(): VarDeclarationStatement {
-        const config = {} as VarDeclarationConfig
-
-        config.isConst = !!this.match(TokenType.CONST)
-
-        if (!config.isConst) {
-            this.match(TokenType.LET)
-        }
-
-        config.variable = this.expect(TokenType.NAME)
-
-        config.type = this.match(TokenType.COLON)
-            ? this.parseTypeExpressions()
-            : null
-
-        config.value = this.match(TokenType.ASSIGN)
-            ? this.parseExpression()
-            : null
-
-        return new VarDeclarationStatement(config)
-    }
-
-    private parseTypeExpressions(): Token {
-        switch (this.current.type) {
-            case TokenType.NULL:
-                return this.expect(TokenType.NULL)
-            case TokenType.STRINGKEYWORD:
-                return this.expect(TokenType.STRINGKEYWORD)
-            case TokenType.NUMBERKEYWORD:
-                return this.expect(TokenType.NUMBERKEYWORD)
-            default:
-                const errorMessage = `Expect type, but got ${this.current}`
-                this.error(errorMessage)
-        }
-    }
-
-    private parseExpression(): Token {
-        switch (this.current.type) {
-            case TokenType.NAME:
-                return this.expect(TokenType.NAME)
-            case TokenType.NUMBER:
-                return this.expect(TokenType.NUMBER)
-            case TokenType.STRING:
-                return this.expect(TokenType.STRING)
-            case TokenType.NULL:
-                return this.expect(TokenType.NULL)
-            default:
-                const errorMessage = `Expected expression, but get ${this.current}`
-                this.error(errorMessage)
-        }
-    }
-
     private expect(tokenType: TokenType): Token | never {
+        this.log(`Очікуємо токен <${tokenType}>`)
         if (CUSTOM_ERROR_FOR_EOF && this.isEnd) {
-            const errorMessage = `Expected token <${tokenType}>, but get end of file`
+            const errorMessage = `Очікували токен <${tokenType}>, але отримали кінець файлу`
             this.error(errorMessage)
         } else if (!this.check(tokenType)) {
-            const errorMessage = `Expected token <${tokenType}>, but get ${this.current}`
+            const errorMessage = `Очікували токен <${tokenType}>, але отримали ${this.current}`
             this.error(errorMessage)
         } else {
             return this.skip()
@@ -151,25 +181,32 @@ export class Parser {
     }
 
     private check(tokenType: TokenType): boolean {
+        this.log(`Перевіряємо чи наступний токен <${tokenType}>`)
+        if (this.current.is(tokenType)) {
+            this.log(`Так, він наступний`)
+        } else {
+            this.log(`Ні`)
+        }
         return this.current.is(tokenType)
     }
 
     private skip(): Token {
         const current = this.current
+        this.log(`Пропускаєм ${current} і переходим до наступного токену`)
         this.pos++
         return current
     }
 
     private log(message: string) {
         if (this.config.debug) {
-            this.config.logger.log('[Parser] ' + message)
+            this.config.logger.log('[Парсер] ' + message)
         }
     }
 
     private error(message: string): never {
         const token = this.current
         const error: CompilerError = {
-            type: 'Syntax',
+            type: 'Синтаксична',
             length: token.text.length,
             line: token.line,
             pos: token.linePos+1,

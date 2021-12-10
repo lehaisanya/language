@@ -1,15 +1,17 @@
 let aaa = 12;
 const bb = "hello world";
 
-c = null;
+let c = null;
 
-const hack: string = "hello"
+
+
+const hack: string = "hello";
 
 const ddd: number = null;
 
 let cccc: null = 123;;;;;
 
-c = asd;
+const c = asd;
 
 
 log 10;;   ;
