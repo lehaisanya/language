@@ -5,28 +5,37 @@ import { Parser } from './modules/parser'
 
 const DEBUG = true
 const FILENAME = 'test/test1.lang'
-const LOGFILE = 'test/test1.log'
+const LOGFILE = 'test/test1'
 
 try {
     const code = fs.readFileSync(FILENAME, 'utf-8')
-    const logfile = fs.createWriteStream(LOGFILE, 'utf-8')
-
-    fs.rmSync(LOGFILE)
-
-    const logger = new Logger({
+    const lexerLog = fs.createWriteStream(LOGFILE + '.lexer.log', 'utf-8')
+    const parserLog = fs.createWriteStream(LOGFILE + '.parser.log', 'utf-8')
+    fs.rmSync(LOGFILE + '.lexer.log')
+    fs.rmSync(LOGFILE + '.parser.log')
+    const lexerLogger = new Logger({
         onLog: (message) => {
-            logfile.write(message + '\n')
+            lexerLog.write(message + '\n')
         },
         onError: (message) => {
-            logfile.write(message + '\n')
+            lexerLog.write(message + '\n')
         }
     })
-    logger.setSource(code, FILENAME)
+    const parserLogger = new Logger({
+        onLog: (message) => {
+            parserLog.write(message + '\n')
+        },
+        onError: (message) => {
+            parserLog.write(message + '\n')
+        }
+    })
+    lexerLogger.setSource(code, FILENAME)
+    parserLogger.setSource(code, FILENAME)
 
-    const lexer = new Lexer({ debug: DEBUG, logger })
+    const lexer = new Lexer({ debug: DEBUG, logger: lexerLogger })
     const tokens = lexer.scan(code)
 
-    const parser = new Parser({ debug: DEBUG, logger })
+    const parser = new Parser({ debug: DEBUG, logger: parserLogger })
     const ast = parser.parse(tokens)
 } catch(err) {
     console.log(err)
