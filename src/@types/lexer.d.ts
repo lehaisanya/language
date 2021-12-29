@@ -22,6 +22,8 @@ declare const enum TokenType {
     STRINGKEYWORD = "STRINGKEYWORD",
     NUMBERKEYWORD = "NUMBERKEYWORD",
     NULL = "NULL",
+    IF = "IF",
+    ELSE = 'ELSE',
 
     // LITERALS
     NUMBER = 'NUMBER',
@@ -48,6 +50,10 @@ declare const enum TokenType {
     // PARENCES
     LPAREN = 'LPARENT',
     RPAREN = 'RPARENT',
+    LFPAREN = 'LFPAREN',
+    RFPAREN = 'RFPAREN',
+    LSPAREN = 'LSPAREN',
+    RSPAREN = "RSPAREN"
 }
 
 declare class Pattern {

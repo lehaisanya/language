@@ -1,5 +1,4 @@
-import { LogStatement, SemiStatement } from "./statements"
-import { VarDeclarationStatement } from "./statements/VarDeclarationStatement"
+import { LogStatement, VarDeclarationStatement } from "./statements"
 
 const CUSTOM_ERROR_FOR_EOF = true
 const NEED_SEMICOLON = true

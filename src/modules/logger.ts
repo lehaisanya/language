@@ -36,14 +36,14 @@ export class Logger {
     }
 
     public error(error: CompilerError) {
-        const errorMessage = this.createErrorMessage(this.file, error)
+        const errorMessage = this.createErrorMessage(error)
         this.config.onError(errorMessage, this.file, error)
     }
 
-    private createErrorMessage(
-        { filename, lines }: FileData,
+    public createErrorMessage(
         { line, pos, length, type, message }: CompilerError
     ): string {
+        const { filename, lines } = this.file
         const intro = `${filename} (${line}:${pos})\n`
         const codeLine = lines[line-1] + '\n'
         const pointer = ' '.repeat(pos-1) + '^'.repeat(length) + '\n'

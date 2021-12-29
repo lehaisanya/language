@@ -1,4 +1,4 @@
-import { Statement } from "."
+import { Statement } from "./Statement"
 
 export class SemiStatement extends Statement {
     constructor() {

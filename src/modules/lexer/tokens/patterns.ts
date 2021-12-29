@@ -11,6 +11,8 @@ export const patterns = [
     new Pattern(TokenType.STRINGKEYWORD, 'string'),
     new Pattern(TokenType.NUMBERKEYWORD, 'number'),
     new Pattern(TokenType.NULL, 'null'),
+    new Pattern(TokenType.IF, 'if'),
+    new Pattern(TokenType.ELSE, 'else'),
 
     new Pattern(TokenType.NUMBER, '[0-9]+'),
     new Pattern(TokenType.NAME, '[a-zA-Z_][a-zA-Z0-9_]*'),
@@ -30,4 +32,8 @@ export const patterns = [
 
     new Pattern(TokenType.LPAREN, '\\('),
     new Pattern(TokenType.RPAREN, '\\)'),
+    new Pattern(TokenType.LFPAREN, '\\{'),
+    new Pattern(TokenType.RFPAREN, '\\}'),
+    new Pattern(TokenType.LSPAREN, '\\['),
+    new Pattern(TokenType.RSPAREN, '\\]'),
 ]

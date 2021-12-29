@@ -1,3 +1,4 @@
 {
-    "ext": "js,lang"
+    "ext": "js,lang",
+    "ignore": ["*.json", "*.log"]
 }
